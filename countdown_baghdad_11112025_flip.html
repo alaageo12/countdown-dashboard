@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>عدّاد تنازلي</title>
+<style>
+  :root {
+    --bg: transparent;
+    --card: #0f172a;
+    --accent: #06b6d4;
+    --digit: #ffffff;
+    --label: #cbd5e1;
+    --done: #22c55e;
+    --shadow: rgba(0,0,0,.25);
+    --radius: 14px;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: "Cairo", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: #e2e8f0;
+    text-align: center;
+  }
+  .wrap { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+  .title { font-size: 20px; color: var(--accent); margin-bottom: 10px; line-height: 1.6; }
+  .deadline { font-size: 16px; color: #94a3b8; margin-bottom: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 14px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  .unit {
+    background: linear-gradient(180deg, #111827, var(--card));
+    border-radius: var(--radius);
+    box-shadow: 0 8px 22px var(--shadow), inset 0 1px 0 rgba(255,255,255,.04);
+    padding: 18px 10px;
+    position: relative;
+  }
+  .label { font-size: 14px; color: var(--label); letter-spacing: .5px; margin-bottom: 8px; }
+  .digits { display: flex; justify-content: center; gap: 8px; }
+  .card { perspective: 800px; width: 56px; height: 72px; position: relative; }
+  .face {
+    position: absolute; inset: 0; background: #0b1220; border-radius: 10px;
+    display: grid; place-items: center; font-size: 42px; font-weight: 700; color: var(--digit);
+    box-shadow: inset 0 -2px 0 rgba(255,255,255,.06), 0 6px 18px var(--shadow);
+    transform-style: preserve-3d; backface-visibility: hidden;
+  }
+  .flip .face.old { animation: flipOut .55s ease forwards; z-index: 2; }
+  .flip .face.new { transform: rotateX(90deg); animation: flipIn .55s ease .05s forwards; z-index: 3; }
+  @keyframes flipOut { 0% { transform: rotateX(0deg);} 100% { transform: rotateX(-90deg); opacity: .9;} }
+  @keyframes flipIn { 0% { transform: rotateX(90deg); opacity: .5;} 100% { transform: rotateX(0deg); opacity: 1;} }
+  .done { display: none; margin-top: 22px; font-size: 22px; color: var(--done); }
+  .tznote { margin-top: 10px; font-size: 13px; color: #94a3b8; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">الوقت المتبقي حتى التصويت العام :</div>
+    <div class="deadline" id="deadlineText"></div>
+    <div class="grid" id="grid">
+      <div class="unit"><div class="label">أيام</div><div class="digits" id="d-days"></div></div>
+      <div class="unit"><div class="label">ساعات</div><div class="digits" id="d-hours"></div></div>
+      <div class="unit"><div class="label">دقائق</div><div class="digits" id="d-mins"></div></div>
+      <div class="unit"><div class="label">ثوانٍ</div><div class="digits" id="d-secs"></div></div>
+    </div>
+    <div class="done" id="doneMsg">🎉 انتهى الوقت!</div>
+    <div class="tznote">التوقيت: آسيا/بغداد (UTC+3)</div>
+  </div>
+<script>
+/* النهاية: 11 نوفمبر 2025، 06:00 صباحًا بتوقيت بغداد (UTC+3) */
+const endUTC = Date.UTC(2025, 10, 11, 3, 0, 0); // الشهر 0=يناير، إذًا 10=نوفمبر. 06:00 بغداد = 03:00 UTC
+
+const twoDigits = v => v.toLocaleString('ar-IQ', {minimumIntegerDigits: 2, useGrouping: false});
+const anyDigits  = v => v.toLocaleString('ar-IQ', {useGrouping: false});
+
+(function setDeadlineText(){
+  const dateInBaghdad = new Date(endUTC);
+  const fmt = new Intl.DateTimeFormat('ar-IQ', {
+    timeZone: 'Asia/Baghdad',
+    weekday: 'long',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+  document.getElementById('deadlineText').textContent =
+    'ينتهي الوقت يوم ' + fmt.format(dateInBaghdad) + ' بتوقيت بغداد';
+})();
+
+function createCard(initial) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const oldFace = document.createElement('div');
+  oldFace.className = 'face old';
+  oldFace.textContent = initial;
+  const newFace = document.createElement('div');
+  newFace.className = 'face new';
+  newFace.textContent = initial;
+  card.appendChild(oldFace);
+  card.appendChild(newFace);
+  return card;
+}
+function setCardValue(card, newVal) {
+  const oldFace = card.querySelector('.face.old');
+  const newFace = card.querySelector('.face.new');
+  if (newFace.textContent === newVal) return;
+  oldFace.textContent = newFace.textContent;
+  newFace.textContent = newVal;
+  card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip');
+}
+
+const elDays  = document.getElementById('d-days');
+const elHours = document.getElementById('d-hours');
+const elMins  = document.getElementById('d-mins');
+const elSecs  = document.getElementById('d-secs');
+
+let dayCards = [];
+const hourCards = [createCard('٠'), createCard('٠')];
+const minCards  = [createCard('٠'), createCard('٠')];
+const secCards  = [createCard('٠'), createCard('٠')];
+
+hourCards.forEach(c => elHours.appendChild(c));
+minCards.forEach(c  => elMins.appendChild(c));
+secCards.forEach(c  => elSecs.appendChild(c));
+
+function applyDays(valueStr) {
+  if (dayCards.length !== valueStr.length) {
+    elDays.innerHTML = ''; dayCards = [];
+    for (let i = 0; i < valueStr.length; i++) {
+      const c = createCard('٠'); dayCards.push(c); elDays.appendChild(c);
+    }
+  }
+  for (let i = 0; i < valueStr.length; i++) setCardValue(dayCards[i], valueStr[i]);
+}
+
+const doneMsg = document.getElementById('doneMsg');
+const grid    = document.getElementById('grid');
+
+function tick() {
+  const now = Date.now();
+  let diff = endUTC - now;
+  if (diff <= 0) {
+    grid.style.display = 'none';
+    doneMsg.style.display = 'block';
+    clearInterval(timer);
+    return;
+  }
+  const sec  = Math.floor(diff / 1000);
+  const days = Math.floor(sec / (60*60*24));
+  const hrs  = Math.floor((sec % (60*60*24)) / 3600);
+  const mins = Math.floor((sec % 3600) / 60);
+  const secs = sec % 60;
+  const daysStr = anyDigits(days);
+  const hrsStr  = twoDigits(hrs);
+  const minStr  = twoDigits(mins);
+  const secStr  = twoDigits(secs);
+  applyDays(daysStr);
+  setCardValue(hourCards[0], hrsStr[0]); setCardValue(hourCards[1], hrsStr[1]);
+  setCardValue(minCards[0],  minStr[0]); setCardValue(minCards[1],  minStr[1]);
+  setCardValue(secCards[0],  secStr[0]); setCardValue(secCards[1],  secStr[1]);
+}
+tick();
+const timer = setInterval(tick, 1000);
+</script>
+</body>
+</html>
