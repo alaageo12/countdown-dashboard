@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>العد التنازلي</title>
+<style>
+  body {
+    background: transparent;
+    font-family: "Cairo", sans-serif;
+    text-align: center;
+    color: #333;
+    direction: rtl;
+  }
+  #countdown {
+    font-size: 40px;
+    color: #e60000;
+    margin-top: 20px;
+  }
+  #done {
+    font-size: 32px;
+    color: green;
+    margin-top: 20px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<h2>الوقت المتبقي حتى ١١/١١/٢٠٢٥ الساعة ٦:٠٠ صباحاً بتوقيت بغداد</h2>
+<div id="countdown"></div>
+<div id="done">🎉 انتهى الوقت!</div>
+
+<script>
+var countDownDate = new Date(Date.UTC(2025, 10, 11, 3, 0, 0)).getTime(); // 6am Baghdad = 3am UTC
+var x = setInterval(function() {
+  var now = new Date().getTime();
+  var distance = countDownDate - now;
+  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+  if (distance > 0) {
+    document.getElementById("countdown").innerHTML =
+      days + " يوم " + hours + " ساعة " + minutes + " دقيقة " + seconds + " ثانية ";
+  } else {
+    clearInterval(x);
+    document.getElementById("countdown").style.display = "none";
+    document.getElementById("done").style.display = "block";
+  }
+}, 1000);
+</script>
+</body>
+</html>
