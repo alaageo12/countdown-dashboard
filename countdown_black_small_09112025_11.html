@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>عدّاد تنازلي</title>
+<style>
+  body {
+    background-color: transparent;
+    font-family: "Cairo", sans-serif;
+    text-align: center;
+    direction: rtl;
+    color: #fff;
+  }
+  h2 { color: #00bcd4; margin-top: 10px; font-size: 18px; }
+  #countdown-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .box {
+    background-color: #000;
+    padding: 10px;
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+  }
+  .number {
+    font-size: 22px;
+    font-weight: bold;
+    display: block;
+  }
+  .label {
+    font-size: 12px;
+    color: #aaa;
+  }
+  #done {
+    display: none;
+    color: #4caf50;
+    font-size: 20px;
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h2>الوقت المتبقي حتى التصويت الخاص (09/11/2025 الساعة 6:00 صباحًا بتوقيت بغداد)</h2>
+
+<div id="countdown-container">
+  <div class="box"><span class="number" id="days">00</span><span class="label">أيام</span></div>
+  <div class="box"><span class="number" id="hours">00</span><span class="label">ساعات</span></div>
+  <div class="box"><span class="number" id="minutes">00</span><span class="label">دقائق</span></div>
+  <div class="box"><span class="number" id="seconds">00</span><span class="label">ثوانٍ</span></div>
+</div>
+
+<div id="done">🎉 انتهى الوقت!</div>
+
+<script>
+var countDownDate = new Date(Date.UTC(2025, 10, 9, 3, 0, 0)).getTime();
+var x = setInterval(function() {
+  var now = new Date().getTime();
+  var distance = countDownDate - now;
+  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+  if (distance > 0) {
+    document.getElementById("days").innerText = days.toLocaleString('ar-IQ');
+    document.getElementById("hours").innerText = hours.toLocaleString('ar-IQ');
+    document.getElementById("minutes").innerText = minutes.toLocaleString('ar-IQ');
+    document.getElementById("seconds").innerText = seconds.toLocaleString('ar-IQ');
+  } else {
+    clearInterval(x);
+    document.getElementById("countdown-container").style.display = "none";
+    document.getElementById("done").style.display = "block";
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
